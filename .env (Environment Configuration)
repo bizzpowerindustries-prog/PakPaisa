@@ -1,0 +1,40 @@
+# ============================================
+# 🚀 PAK PAISA - PHP BACKEND CONFIGURATION
+# ============================================
+
+# Application
+APP_NAME="Pak Paisa"
+APP_ENV=development
+APP_DEBUG=true
+APP_URL=http://localhost:5000
+
+# Database
+DB_HOST=localhost
+DB_NAME=pakpaisa
+DB_USER=root
+DB_PASS=yourpassword
+DB_PORT=3306
+
+# JWT Security
+JWT_SECRET=pakpaisa-super-secret-key-2026-very-secure-256-bit
+JWT_EXPIRY=604800  # 7 days in seconds
+
+# OTP (Twilio - Optional for testing)
+TWILIO_SID=your_twilio_account_sid
+TWILIO_TOKEN=your_twilio_auth_token
+TWILIO_PHONE=+1234567890
+
+# Testing Mode
+TESTING_MODE=true
+MOCK_BALANCE=125750.00
+
+# Safeguarding Account (Askari Bank)
+BANK_ACCOUNT=SAFE-0000-0000-0001
+BANK_NAME="Askari Bank Limited"
+BANK_IBAN=PK45ASKA0000000000000001
+BANK_API_KEY=your-api-key
+BANK_API_SECRET=your-api-secret
+BANK_API_URL=https://sandbox.askaribank.com.pk/api
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
