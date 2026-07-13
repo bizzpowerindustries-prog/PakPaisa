@@ -1,0 +1,83 @@
+<?php
+// index.php - Main Entry Point
+
+// Enable error reporting for development
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Load Composer autoloader
+require_once __DIR__ . '/vendor/autoload.php';
+
+use PakPaisa\Config\Database;
+use PakPaisa\Config\Config;
+
+// Set CORS headers
+$config = Config::getInstance();
+$allowedOrigins = $config->get('allowed_origins', []);
+
+if (in_array($_SERVER['HTTP_ORIGIN'] ?? '', $allowedOrigins) || $config->isTesting()) {
+    header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    header('Access-Control-Allow-Credentials: true');
+}
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// Initialize database and setup tables
+try {
+    $db = Database::getInstance();
+    $db->setupTables();
+} catch (Exception $e) {
+    error_log("Database Error: " . $e->getMessage());
+}
+
+// Parse request URI
+$requestUri = $_SERVER['REQUEST_URI'];
+$basePath = '/api';
+$path = str_replace($basePath, '', parse_url($requestUri, PHP_URL_PATH));
+$path = trim($path, '/');
+
+// Parse request method
+$method = $_SERVER['REQUEST_METHOD'];
+
+// Load request body for POST/PUT requests
+$requestBody = [];
+if ($method === 'POST' || $method === 'PUT') {
+    $input = file_get_contents('php://input');
+    $requestBody = json_decode($input, true) ?? [];
+}
+
+// Route the request
+$segments = explode('/', $path);
+$resource = $segments[0] ?? '';
+
+switch ($resource) {
+    case 'auth':
+        require_once __DIR__ . '/api/auth/' . ($segments[1] ?? '') . '.php';
+        break;
+        
+    case 'wallet':
+        require_once __DIR__ . '/api/wallet/' . ($segments[1] ?? 'balance') . '.php';
+        break;
+        
+    case 'admin':
+        require_once __DIR__ . '/api/admin/' . ($segments[1] ?? 'stats') . '.php';
+        break;
+        
+    case 'health':
+        jsonResponse([
+            'status' => 'healthy',
+            'timestamp' => date('c'),
+            'mode' => $config->isTesting() ? 'TESTING' : 'LIVE'
+        ]);
+        break;
+        
+    default:
+        jsonResponse(['error' => 'Endpoint not found'], 404);
+        break;
+}
